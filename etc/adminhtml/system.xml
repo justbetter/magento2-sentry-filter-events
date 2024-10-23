@@ -5,12 +5,17 @@
             <group id="event_filtering" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Sentry event filtering</label>
                 <comment><![CDATA[Prevent events from being dispatched to Sentry by filtering on exception message contents]]></comment>
-                <field id="messages" translate="label" type="text" sortOrder="10" showInDefault="1"
+                <field id="default_messages_external_location" translate="label" type="text" sortOrder="10" showInDefault="1"
+                       showInWebsite="0" showInStore="0">
+                    <label>External link with default event messages</label>
+                    <comment>Default Event messages that should be filtered for every project (in JSON format)</comment>
+                </field>
+                <field id="messages" translate="label" type="text" sortOrder="20" showInDefault="1"
                        showInWebsite="0" showInStore="0">
                     <label>Messages</label>
                     <frontend_model>JustBetter\SentryFilterEvents\Block\Adminhtml\System\Config\Form\Field\Messages</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment>Event messages to filter</comment>
+                    <comment>Custom Event messages to filter</comment>
                 </field>
             </group>
         </section>
