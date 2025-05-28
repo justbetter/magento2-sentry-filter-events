@@ -9,20 +9,35 @@
   },
   "authors": [
     {
-        "name": "Robin Mulder",
-        "email": "robin@justbetter.nl",
-        "homepage": "https://justbetter.nl",
-        "role": "Developer"
+      "name": "Robin Mulder",
+      "email": "robin@justbetter.nl",
+      "homepage": "https://justbetter.nl",
+      "role": "Developer"
     },
-      {
-        "name": "Indy Koning",
-        "email": "indy@justbetter.nl",
-        "homepage": "https://justbetter.nl",
-        "role": "Developer"
-      }
+    {
+      "name": "Indy Koning",
+      "email": "indy@justbetter.nl",
+      "homepage": "https://justbetter.nl",
+      "role": "Developer"
+    }
   ],
+  "repositories": {
+    "magento": {
+      "type": "composer",
+      "url": "https://repo-magento-mirror.fooman.co.nz/"
+    }
+  },
   "autoload": {
-    "psr-4": { "JustBetter\\SentryFilterEvents\\": "" },
-    "files": [ "registration.php" ]
+    "psr-4": {
+      "JustBetter\\SentryFilterEvents\\": ""
+    },
+    "files": [
+      "registration.php"
+    ]
+  },
+  "config": {
+    "allow-plugins": {
+      "magento/composer-dependency-version-audit-plugin": true
+    }
   }
 }
