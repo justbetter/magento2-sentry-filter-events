@@ -2,15 +2,17 @@
 
 namespace JustBetter\SentryFilterEvents\Observer;
 
+use InvalidArgumentException;
+use JustBetter\SentryFilterEvents\Model\Cache\Type\SentryFilterEventsCache;
 use Laminas\Http\Request;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
-use JustBetter\SentryFilterEvents\Model\Cache\Type\SentryFilterEventsCache;
-use InvalidArgumentException;
+use Magento\Framework\Serialize\Serializer\Json;
+use Sentry\Event;
+use Sentry\EventHint;
 
 class BeforeSending implements ObserverInterface
 {
@@ -24,9 +26,7 @@ class BeforeSending implements ObserverInterface
         protected Json                    $json,
         protected CurlFactory             $curlFactory,
         protected SentryFilterEventsCache $cache
-    )
-    {
-    }
+    ) {}
 
     /**
      * Filter event before dispatching it to sentry
@@ -36,13 +36,28 @@ class BeforeSending implements ObserverInterface
      */
     public function execute(Observer $observer): void
     {
+        /** @var Event $event */
         $event = $observer->getEvent()->getSentryEvent()->getEvent();
+        /** @var EventHint $hint */
         $hint = $observer->getEvent()->getSentryEvent()->getHint();
 
+        /** @var string $hintMessage */
         $hintMessage = $hint?->exception?->getMessage() ?? $event->getMessage();
+        $rawMessage = '';
         if ($hint?->exception instanceof LocalizedException) {
-            $hintMessage = $hint->exception->getRawMessage();
+            // The untranslated string with parameters filled in.
+            $hintMessage = $hint->exception->getLogMessage();
+            // The untranslated string without parameters filled in.
+            $rawMessage = $hint->exception->getRawMessage();
             $event->setMessage($hintMessage);
+
+            $event->setContext('message', [
+                'raw_message' => $rawMessage,
+                'parameters' => $hint->exception->getParameters(),
+                'message' => $hintMessage,
+                'translated_message' => $hint->exception->getMessage()
+            ]);
+
             $event->getExceptions()[0]->setValue($hintMessage);
             $observer->getEvent()->getSentryEvent()->setEvent($event);
         }
@@ -50,12 +65,11 @@ class BeforeSending implements ObserverInterface
         $messages = array_merge($this->getCustomMessages(), $this->getDefaultMessages());
 
         foreach ($messages as $message) {
-            if (str_contains($hintMessage, $message['message'])) {
+            if (str_contains($hintMessage, $message['message']) || str_contains($rawMessage, $message['message'])) {
                 $observer->getEvent()->getSentryEvent()->unsEvent();
                 break;
             }
         }
-
     }
 
     private function getCustomMessages(): array
